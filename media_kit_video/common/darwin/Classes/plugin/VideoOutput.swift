@@ -196,4 +196,39 @@ public class VideoOutput: NSObject {
                                       : params.dw))
         )
   }
+
+  // MARK: - Picture in Picture Support
+
+  func enterPictureInPicture() -> Bool {
+    // iOS 14.0+ için AVPictureInPictureController kullanılacak
+    // Şimdilik basit implementation
+    if #available(iOS 14.0, *) {
+      // TODO: AVPictureInPictureController implementation
+      print("VideoOutput: Picture in Picture entry requested (not yet implemented)")
+      return false
+    } else {
+      return false
+    }
+  }
+
+  func exitPictureInPicture() -> Bool {
+    // iOS 14.0+ için AVPictureInPictureController kullanılacak
+    if #available(iOS 14.0, *) {
+      // TODO: AVPictureInPictureController implementation
+      print("VideoOutput: Picture in Picture exit requested (not yet implemented)")
+      return false
+    } else {
+      return false
+    }
+  }
+
+  func isInPictureInPictureMode() -> Bool {
+    // iOS 14.0+ için AVPictureInPictureController kullanılacak
+    if #available(iOS 14.0, *) {
+      // TODO: AVPictureInPictureController implementation
+      return false
+    } else {
+      return false
+    }
+  }
 }

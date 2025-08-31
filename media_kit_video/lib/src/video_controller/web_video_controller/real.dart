@@ -116,6 +116,71 @@ class WebVideoController extends PlatformVideoController {
     );
   }
 
+  @override
+  Future<bool> enterPictureInPicture() async {
+    if (!await isPictureInPictureSupported()) {
+      throw UnsupportedError('Picture in Picture is not supported in this browser.');
+    }
+
+    try {
+      // Try to find the video element in the DOM
+      final videoElement = web.document.querySelector('video');
+      if (videoElement != null && videoElement is web.HTMLVideoElement) {
+        try {
+          (videoElement as JSObject).callMethod('requestPictureInPicture'.toJS);
+          return true;
+        } catch (_) {
+          return false;
+        }
+      }
+      return false;
+    } catch (e) {
+      debugPrint('WebVideoController.enterPictureInPicture error: $e');
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> exitPictureInPicture() async {
+    try {
+      if (await isInPictureInPictureMode()) {
+        try {
+          (web.document as JSObject).callMethod('exitPictureInPicture'.toJS);
+          return true;
+        } catch (_) {
+          return false;
+        }
+      }
+      return false;
+    } catch (e) {
+      debugPrint('WebVideoController.exitPictureInPicture error: $e');
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> isInPictureInPictureMode() async {
+    try {
+      final result = (web.document as JSObject).getProperty('pictureInPictureElement'.toJS);
+      return result != null && result.dartify() != null;
+    } catch (e) {
+      debugPrint('WebVideoController.isInPictureInPictureMode error: $e');
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> isPictureInPictureSupported() async {
+    try {
+      // Check if the browser supports Picture in Picture API
+      final enabled = (web.document as JSObject).getProperty('pictureInPictureEnabled'.toJS).dartify();
+      return enabled == true;
+    } catch (e) {
+      debugPrint('WebVideoController.isPictureInPictureSupported error: $e');
+      return false;
+    }
+  }
+
   /// Disposes the instance. Releases allocated resources back to the system.
   Future<void> _dispose() async {
     super.dispose();

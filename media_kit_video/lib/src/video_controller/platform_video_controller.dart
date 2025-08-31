@@ -44,16 +44,41 @@ abstract class PlatformVideoController {
   /// This may yield substantial performance improvements if a small [width] & [height] is specified.
   ///
   /// Remember:
-  /// * “Premature optimization is the root of all evil”
-  /// * “With great power comes great responsibility”
+  /// * "Premature optimization is the root of all evil"
+  /// * "With great power comes great responsibility"
   Future<void> setSize({
     int? width,
     int? height,
   });
 
   /// A [Future] that completes when the first video frame has been rendered.
-  Future<void> get waitUntilFirstFrameRendered =>
-      waitUntilFirstFrameRenderedCompleter.future;
+  Future<void> get waitUntilFirstFrameRendered => waitUntilFirstFrameRenderedCompleter.future;
+
+  /// Enters Picture in Picture mode.
+  ///
+  /// Returns `true` if PiP mode was successfully entered, `false` otherwise.
+  ///
+  /// Throws [UnsupportedError] if PiP is not supported on the current platform.
+  Future<bool> enterPictureInPicture() async {
+    throw UnsupportedError('Picture in Picture is not supported on this platform.');
+  }
+
+  /// Exits Picture in Picture mode.
+  ///
+  /// Returns `true` if PiP mode was successfully exited, `false` otherwise.
+  Future<bool> exitPictureInPicture() async {
+    throw UnsupportedError('Picture in Picture is not supported on this platform.');
+  }
+
+  /// Returns `true` if the video is currently in Picture in Picture mode.
+  Future<bool> isInPictureInPictureMode() async {
+    return false;
+  }
+
+  /// Returns `true` if Picture in Picture is supported on the current platform.
+  Future<bool> isPictureInPictureSupported() async {
+    return false;
+  }
 
   /// [Completer] used to signal the decoding & rendering of the first video frame.
   /// Use [waitUntilFirstFrameRendered] to wait for the first frame to be rendered.
@@ -148,10 +173,8 @@ class VideoControllerConfiguration {
         scale: scale ?? this.scale,
         width: width ?? this.width,
         height: height ?? this.height,
-        enableHardwareAcceleration:
-            enableHardwareAcceleration ?? this.enableHardwareAcceleration,
+        enableHardwareAcceleration: enableHardwareAcceleration ?? this.enableHardwareAcceleration,
         androidAttachSurfaceAfterVideoParameters:
-            androidAttachSurfaceAfterVideoParameters ??
-                this.androidAttachSurfaceAfterVideoParameters,
+            androidAttachSurfaceAfterVideoParameters ?? this.androidAttachSurfaceAfterVideoParameters,
       );
 }

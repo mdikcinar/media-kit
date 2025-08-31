@@ -29,11 +29,7 @@ import 'package:media_kit_video/src/video_controller/platform_video_controller.d
 /// {@endtemplate}
 class NativeVideoController extends PlatformVideoController {
   /// Whether [NativeVideoController] is supported on the current platform or not.
-  static bool get supported =>
-      Platform.isWindows ||
-      Platform.isLinux ||
-      Platform.isMacOS ||
-      Platform.isIOS;
+  static bool get supported => Platform.isWindows || Platform.isLinux || Platform.isMacOS || Platform.isIOS;
 
   /// Fixed width of the video output.
   int? width;
@@ -181,8 +177,7 @@ class NativeVideoController extends PlatformVideoController {
         'configuration': {
           'width': configuration.width.toString(),
           'height': configuration.height.toString(),
-          'enableHardwareAcceleration':
-              configuration.enableHardwareAcceleration,
+          'enableHardwareAcceleration': configuration.enableHardwareAcceleration,
         },
       },
     );
@@ -235,6 +230,72 @@ class NativeVideoController extends PlatformVideoController {
     }
   }
 
+  @override
+  Future<bool> enterPictureInPicture() async {
+    if (!await isPictureInPictureSupported()) {
+      throw UnsupportedError('Picture in Picture is not supported on this platform.');
+    }
+
+    try {
+      final handle = await player.handle;
+      final result = await _channel.invokeMethod<bool>(
+        'VideoOutput.EnterPictureInPicture',
+        {
+          'handle': handle.toString(),
+        },
+      );
+      return result ?? false;
+    } catch (e) {
+      debugPrint('NativeVideoController.enterPictureInPicture error: $e');
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> exitPictureInPicture() async {
+    try {
+      final handle = await player.handle;
+      final result = await _channel.invokeMethod<bool>(
+        'VideoOutput.ExitPictureInPicture',
+        {
+          'handle': handle.toString(),
+        },
+      );
+      return result ?? false;
+    } catch (e) {
+      debugPrint('NativeVideoController.exitPictureInPicture error: $e');
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> isInPictureInPictureMode() async {
+    try {
+      final handle = await player.handle;
+      final result = await _channel.invokeMethod<bool>(
+        'VideoOutput.IsInPictureInPictureMode',
+        {
+          'handle': handle.toString(),
+        },
+      );
+      return result ?? false;
+    } catch (e) {
+      debugPrint('NativeVideoController.isInPictureInPictureMode error: $e');
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> isPictureInPictureSupported() async {
+    try {
+      final result = await _channel.invokeMethod<bool>('VideoOutput.IsPictureInPictureSupported');
+      return result ?? false;
+    } catch (e) {
+      debugPrint('NativeVideoController.isPictureInPictureSupported error: $e');
+      return false;
+    }
+  }
+
   /// Disposes the instance. Releases allocated resources back to the system.
   Future<void> _dispose() async {
     super.dispose();
@@ -254,46 +315,44 @@ class NativeVideoController extends PlatformVideoController {
   static final _controllers = HashMap<int, NativeVideoController>();
 
   /// [MethodChannel] for invoking platform specific native implementation.
-  static final _channel =
-      const MethodChannel('com.alexmercerind/media_kit_video')
-        ..setMethodCallHandler(
-          (MethodCall call) async {
-            try {
-              debugPrint(call.method.toString());
-              debugPrint(call.arguments.toString());
-              switch (call.method) {
-                case 'VideoOutput.Resize':
-                  {
-                    // Notify about updated texture ID & [Rect].
-                    final int handle = call.arguments['handle'];
-                    final Rect rect = Rect.fromLTWH(
-                      call.arguments['rect']['left'] * 1.0,
-                      call.arguments['rect']['top'] * 1.0,
-                      call.arguments['rect']['width'] * 1.0,
-                      call.arguments['rect']['height'] * 1.0,
-                    );
-                    final int id = call.arguments['id'];
-                    _controllers[handle]?.rect.value = rect;
-                    _controllers[handle]?.id.value = id;
-                    // Notify about the first frame being rendered.
-                    if (rect.width > 0 && rect.height > 0) {
-                      final completer = _controllers[handle]
-                          ?.waitUntilFirstFrameRenderedCompleter;
-                      if (!(completer?.isCompleted ?? true)) {
-                        completer?.complete();
-                      }
-                    }
-                    break;
+  static final _channel = const MethodChannel('com.alexmercerind/media_kit_video')
+    ..setMethodCallHandler(
+      (MethodCall call) async {
+        try {
+          debugPrint(call.method.toString());
+          debugPrint(call.arguments.toString());
+          switch (call.method) {
+            case 'VideoOutput.Resize':
+              {
+                // Notify about updated texture ID & [Rect].
+                final int handle = call.arguments['handle'];
+                final Rect rect = Rect.fromLTWH(
+                  call.arguments['rect']['left'] * 1.0,
+                  call.arguments['rect']['top'] * 1.0,
+                  call.arguments['rect']['width'] * 1.0,
+                  call.arguments['rect']['height'] * 1.0,
+                );
+                final int id = call.arguments['id'];
+                _controllers[handle]?.rect.value = rect;
+                _controllers[handle]?.id.value = id;
+                // Notify about the first frame being rendered.
+                if (rect.width > 0 && rect.height > 0) {
+                  final completer = _controllers[handle]?.waitUntilFirstFrameRenderedCompleter;
+                  if (!(completer?.isCompleted ?? true)) {
+                    completer?.complete();
                   }
-                default:
-                  {
-                    break;
-                  }
+                }
+                break;
               }
-            } catch (exception, stacktrace) {
-              debugPrint(exception.toString());
-              debugPrint(stacktrace.toString());
-            }
-          },
-        );
+            default:
+              {
+                break;
+              }
+          }
+        } catch (exception, stacktrace) {
+          debugPrint(exception.toString());
+          debugPrint(stacktrace.toString());
+        }
+      },
+    );
 }

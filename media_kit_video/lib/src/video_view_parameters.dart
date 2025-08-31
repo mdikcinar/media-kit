@@ -3,7 +3,6 @@
 /// Copyright © 2023 & onwards, Abdelaziz Mahdy <abdelaziz.h.mahdy@gmail.com>.
 /// All rights reserved.
 /// Use of this source code is governed by MIT license that can be found in the LICENSE file.
-import 'dart:async';
 import 'package:flutter/widgets.dart';
 
 import 'package:media_kit_video/src/video/video.dart';
@@ -26,6 +25,9 @@ class VideoViewParameters {
   final double? aspectRatio;
   final FilterQuality filterQuality;
   final /* VideoControlsBuilder? */ dynamic controls;
+  final bool enablePictureInPicture;
+  final VoidCallback? onEnterPictureInPicture;
+  final VoidCallback? onExitPictureInPicture;
   final SubtitleViewConfiguration subtitleViewConfiguration;
   final FocusNode? focusNode;
 
@@ -39,6 +41,9 @@ class VideoViewParameters {
     required this.aspectRatio,
     required this.filterQuality,
     required this.controls,
+    required this.enablePictureInPicture,
+    this.onEnterPictureInPicture,
+    this.onExitPictureInPicture,
     required this.subtitleViewConfiguration,
     this.focusNode,
   });
@@ -52,11 +57,10 @@ class VideoViewParameters {
     double? aspectRatio,
     FilterQuality? filterQuality,
     /* VideoControlsBuilder? */ dynamic controls,
-    bool? pauseUponEnteringBackgroundMode,
-    bool? resumeUponEnteringForegroundMode,
+    bool? enablePictureInPicture,
+    VoidCallback? onEnterPictureInPicture,
+    VoidCallback? onExitPictureInPicture,
     SubtitleViewConfiguration? subtitleViewConfiguration,
-    Future<void> Function()? onEnterFullscreen,
-    Future<void> Function()? onExitFullscreen,
     FocusNode? focusNode,
   }) {
     return VideoViewParameters(
@@ -68,8 +72,10 @@ class VideoViewParameters {
       aspectRatio: aspectRatio ?? this.aspectRatio,
       filterQuality: filterQuality ?? this.filterQuality,
       controls: controls ?? this.controls,
-      subtitleViewConfiguration:
-          subtitleViewConfiguration ?? this.subtitleViewConfiguration,
+      enablePictureInPicture: enablePictureInPicture ?? this.enablePictureInPicture,
+      onEnterPictureInPicture: onEnterPictureInPicture ?? this.onEnterPictureInPicture,
+      onExitPictureInPicture: onExitPictureInPicture ?? this.onExitPictureInPicture,
+      subtitleViewConfiguration: subtitleViewConfiguration ?? this.subtitleViewConfiguration,
       focusNode: focusNode ?? this.focusNode,
     );
   }
@@ -86,6 +92,9 @@ class VideoViewParameters {
           other.aspectRatio == aspectRatio &&
           other.filterQuality == filterQuality &&
           other.controls == controls &&
+          other.enablePictureInPicture == enablePictureInPicture &&
+          other.onEnterPictureInPicture == onEnterPictureInPicture &&
+          other.onExitPictureInPicture == onExitPictureInPicture &&
           other.subtitleViewConfiguration == subtitleViewConfiguration &&
           other.focusNode == focusNode;
 
@@ -99,6 +108,9 @@ class VideoViewParameters {
       aspectRatio.hashCode ^
       filterQuality.hashCode ^
       controls.hashCode ^
+      enablePictureInPicture.hashCode ^
+      onEnterPictureInPicture.hashCode ^
+      onExitPictureInPicture.hashCode ^
       subtitleViewConfiguration.hashCode ^
       focusNode.hashCode;
 }

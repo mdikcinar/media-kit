@@ -77,8 +77,7 @@ class AndroidVideoController extends PlatformVideoController {
     // Not doing so will cause MediaCodec usage inside libavcodec to incorrectly fail with error (because this android.view.Surface would be used twice):
     // "native_window_api_connect returned an error: Invalid argument (-22)" & next less-efficient hwdec will be used redundantly.
     return lock.synchronized(() async {
-      if ((rect.value?.width ?? 0.0) <= 1.0 ||
-          (rect.value?.height ?? 0.0) <= 1.0) {
+      if ((rect.value?.width ?? 0.0) <= 1.0 || (rect.value?.height ?? 0.0) <= 1.0) {
         // Do not set --vo if the rect is currently not available.
         return;
       }
@@ -260,6 +259,54 @@ class AndroidVideoController extends PlatformVideoController {
     );
   }
 
+  @override
+  Future<bool> enterPictureInPicture() async {
+    if (!await isPictureInPictureSupported()) {
+      throw UnsupportedError('Picture in Picture is not supported on this device.');
+    }
+
+    try {
+      final result = await _channel.invokeMethod<bool>('enterPictureInPicture');
+      return result ?? false;
+    } catch (e) {
+      debugPrint('AndroidVideoController.enterPictureInPicture error: $e');
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> exitPictureInPicture() async {
+    try {
+      final result = await _channel.invokeMethod<bool>('exitPictureInPicture');
+      return result ?? false;
+    } catch (e) {
+      debugPrint('AndroidVideoController.exitPictureInPicture error: $e');
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> isInPictureInPictureMode() async {
+    try {
+      final result = await _channel.invokeMethod<bool>('isInPictureInPictureMode');
+      return result ?? false;
+    } catch (e) {
+      debugPrint('AndroidVideoController.isInPictureInPictureMode error: $e');
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> isPictureInPictureSupported() async {
+    try {
+      final result = await _channel.invokeMethod<bool>('isPictureInPictureSupported');
+      return result ?? false;
+    } catch (e) {
+      debugPrint('AndroidVideoController.isPictureInPictureSupported error: $e');
+      return false;
+    }
+  }
+
   /// Disposes the instance. Releases allocated resources back to the system.
   Future<void> _dispose() async {
     super.dispose();
@@ -282,54 +329,52 @@ class AndroidVideoController extends PlatformVideoController {
   static final _controllers = HashMap<int, AndroidVideoController>();
 
   /// [MethodChannel] for invoking platform specific native implementation.
-  static final _channel =
-      const MethodChannel('com.alexmercerind/media_kit_video')
-        ..setMethodCallHandler(
-          (MethodCall call) async {
-            try {
-              debugPrint(call.method.toString());
-              debugPrint(call.arguments.toString());
-              switch (call.method) {
-                case 'VideoOutput.Resize':
-                  {
-                    // Notify about updated texture ID & [Rect].
-                    final int handle = call.arguments['handle'];
-                    final Rect rect = Rect.fromLTWH(
-                      call.arguments['rect']['left'] * 1.0,
-                      call.arguments['rect']['top'] * 1.0,
-                      call.arguments['rect']['width'] * 1.0,
-                      call.arguments['rect']['height'] * 1.0,
-                    );
-                    final int id = call.arguments['id'];
-                    final int wid = call.arguments['wid'];
-                    _controllers[handle]?.rect.value = rect;
-                    _controllers[handle]?.id.value = id;
-                    // Only on Android:
-                    _controllers[handle]?.wid.value = wid;
-                    break;
-                  }
-                case 'VideoOutput.WaitUntilFirstFrameRenderedNotify':
-                  {
-                    // Notify about updated texture ID & [Rect].
-                    final int handle = call.arguments['handle'];
-                    debugPrint(handle.toString());
-                    // Notify about the first frame being rendered.
-                    final completer = _controllers[handle]
-                        ?.waitUntilFirstFrameRenderedCompleter;
-                    if (!(completer?.isCompleted ?? true)) {
-                      completer?.complete();
-                    }
-                    break;
-                  }
-                default:
-                  {
-                    break;
-                  }
+  static final _channel = const MethodChannel('com.alexmercerind/media_kit_video')
+    ..setMethodCallHandler(
+      (MethodCall call) async {
+        try {
+          debugPrint(call.method.toString());
+          debugPrint(call.arguments.toString());
+          switch (call.method) {
+            case 'VideoOutput.Resize':
+              {
+                // Notify about updated texture ID & [Rect].
+                final int handle = call.arguments['handle'];
+                final Rect rect = Rect.fromLTWH(
+                  call.arguments['rect']['left'] * 1.0,
+                  call.arguments['rect']['top'] * 1.0,
+                  call.arguments['rect']['width'] * 1.0,
+                  call.arguments['rect']['height'] * 1.0,
+                );
+                final int id = call.arguments['id'];
+                final int wid = call.arguments['wid'];
+                _controllers[handle]?.rect.value = rect;
+                _controllers[handle]?.id.value = id;
+                // Only on Android:
+                _controllers[handle]?.wid.value = wid;
+                break;
               }
-            } catch (exception, stacktrace) {
-              debugPrint(exception.toString());
-              debugPrint(stacktrace.toString());
-            }
-          },
-        );
+            case 'VideoOutput.WaitUntilFirstFrameRenderedNotify':
+              {
+                // Notify about updated texture ID & [Rect].
+                final int handle = call.arguments['handle'];
+                debugPrint(handle.toString());
+                // Notify about the first frame being rendered.
+                final completer = _controllers[handle]?.waitUntilFirstFrameRenderedCompleter;
+                if (!(completer?.isCompleted ?? true)) {
+                  completer?.complete();
+                }
+                break;
+              }
+            default:
+              {
+                break;
+              }
+          }
+        } catch (exception, stacktrace) {
+          debugPrint(exception.toString());
+          debugPrint(stacktrace.toString());
+        }
+      },
+    );
 }

@@ -61,6 +61,14 @@ public class MediaKitVideoPlugin: NSObject, FlutterPlugin {
       handleEnterNativeFullscreenMethodCall(call.arguments, result)
     case "Utils.ExitNativeFullscreen":
       handleExitNativeFullscreenMethodCall(call.arguments, result)
+    case "VideoOutput.EnterPictureInPicture":
+      handleEnterPictureInPictureMethodCall(call.arguments, result)
+    case "VideoOutput.ExitPictureInPicture":
+      handleExitPictureInPictureMethodCall(call.arguments, result)
+    case "VideoOutput.IsInPictureInPictureMode":
+      handleIsInPictureInPictureModeMethodCall(call.arguments, result)
+    case "VideoOutput.IsPictureInPictureSupported":
+      handleIsPictureInPictureSupportedMethodCall(call.arguments, result)
     default:
       result(FlutterMethodNotImplemented)
     }
@@ -164,5 +172,55 @@ public class MediaKitVideoPlugin: NSObject, FlutterPlugin {
 
     utils?.exitNativeFullscreen()
     result(nil)
+  }
+
+  private func handleEnterPictureInPictureMethodCall(
+    _ arguments: Any?,
+    _ result: @escaping FlutterResult
+  ) {
+    let args = arguments as? [String: Any]
+    let handleStr = args?["handle"] as! String
+    let handle: Int64? = Int64(handleStr)
+    
+    assert(handle != nil, "handle must be an Int64")
+    
+    let success = videoOutputManager.enterPictureInPicture(handle: handle!)
+    result(success)
+  }
+
+  private func handleExitPictureInPictureMethodCall(
+    _ arguments: Any?,
+    _ result: @escaping FlutterResult
+  ) {
+    let args = arguments as? [String: Any]
+    let handleStr = args?["handle"] as! String
+    let handle: Int64? = Int64(handleStr)
+    
+    assert(handle != nil, "handle must be an Int64")
+    
+    let success = videoOutputManager.exitPictureInPicture(handle: handle!)
+    result(success)
+  }
+
+  private func handleIsInPictureInPictureModeMethodCall(
+    _ arguments: Any?,
+    _ result: @escaping FlutterResult
+  ) {
+    let args = arguments as? [String: Any]
+    let handleStr = args?["handle"] as! String
+    let handle: Int64? = Int64(handleStr)
+    
+    assert(handle != nil, "handle must be an Int64")
+    
+    let isInPiP = videoOutputManager.isInPictureInPictureMode(handle: handle!)
+    result(isInPiP)
+  }
+
+  private func handleIsPictureInPictureSupportedMethodCall(
+    _: Any?,
+    _ result: @escaping FlutterResult
+  ) {
+    let isSupported = videoOutputManager.isPictureInPictureSupported()
+    result(isSupported)
   }
 }

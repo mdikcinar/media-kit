@@ -53,4 +53,34 @@ public class VideoOutputManager: NSObject {
 
     self.videoOutputs[handle] = nil
   }
+
+  public func enterPictureInPicture(handle: Int64) -> Bool {
+    guard let videoOutput = self.videoOutputs[handle] else {
+      return false
+    }
+    return videoOutput.enterPictureInPicture()
+  }
+
+  public func exitPictureInPicture(handle: Int64) -> Bool {
+    guard let videoOutput = self.videoOutputs[handle] else {
+      return false
+    }
+    return videoOutput.exitPictureInPicture()
+  }
+
+  public func isInPictureInPictureMode(handle: Int64) -> Bool {
+    guard let videoOutput = self.videoOutputs[handle] else {
+      return false
+    }
+    return videoOutput.isInPictureInPictureMode()
+  }
+
+  public func isPictureInPictureSupported() -> Bool {
+    // iOS 14.0+ için PiP desteği kontrol et
+    if #available(iOS 14.0, *) {
+      return true
+    } else {
+      return false
+    }
+  }
 }

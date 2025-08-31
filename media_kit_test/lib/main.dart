@@ -9,6 +9,7 @@ import 'common/sources/sources.dart';
 import 'tests/01.single_player_single_video.dart';
 import 'tests/02.single_player_multiple_video.dart';
 import 'tests/03.multiple_player_multiple_video.dart';
+import 'tests/04.picture_in_picture_test.dart';
 import 'tests/04.tabs_test.dart';
 import 'tests/05.stress_test.dart';
 import 'tests/06.paint_first_frame.dart';
@@ -106,8 +107,7 @@ class PrimaryScreen extends StatelessWidget {
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (context) =>
-                        const SinglePlayerMultipleVideoScreen(),
+                    builder: (context) => const SinglePlayerMultipleVideoScreen(),
                   ),
                 );
               },
@@ -122,12 +122,34 @@ class PrimaryScreen extends StatelessWidget {
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (context) =>
-                      const MultiplePlayerMultipleVideoScreen(),
+                  builder: (context) => const MultiplePlayerMultipleVideoScreen(),
                 ),
               );
             },
           ),
+          if (!UniversalPlatform.isWeb &&
+              !UniversalPlatform.isWindows &&
+              !UniversalPlatform.isLinux &&
+              !UniversalPlatform.isMacOS)
+            ListTile(
+              title: const Text(
+                'picture_in_picture_test.dart',
+                style: TextStyle(fontSize: 14.0),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              subtitle: const Text(
+                'Picture in Picture support (iOS 14.0+ / Android API 26+)',
+                style: TextStyle(fontSize: 12.0, color: Colors.grey),
+              ),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const PictureInPictureTestScreen(),
+                  ),
+                );
+              },
+            ),
           ListTile(
             title: const Text(
               'tabs_test.dart',
